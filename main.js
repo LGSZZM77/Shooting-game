@@ -5,10 +5,12 @@ canvas.width = 400;
 canvas.height = 700;
 document.body.appendChild(canvas);
 
+let backgroundImage, spaceshipImage, bulletImage, enemyImage, gameoverImage;
+let gameover = false;
+
 //우주선
 const spaceshipSize = 64;
 const halfSpaceshipSize = 32;
-let backgroundImage, spaceshipImage, bulletImage, enemyImage, gameoverImage;
 let spaceshipX = canvas.width / 2 - halfSpaceshipSize;
 let spaceshipY = canvas.height - spaceshipSize;
 
@@ -24,6 +26,27 @@ function Bullet() {
   };
   this.update = () => {
     this.y -= 5;
+  };
+}
+function generateRandomValue(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+let enemyList = [];
+function Enemy() {
+  this.x = 0;
+  this.y = 0;
+  this.init = () => {
+    this.x = generateRandomValue(0, canvas.width - 48);
+    this.y = 0;
+    enemyList.push(this);
+  };
+  this.update = () => {
+    this.y += 1;
+
+    if (this.y > canvas.height - 48) {
+      gameover = true;
+      console.log("gameover");
+    }
   };
 }
 
@@ -58,6 +81,13 @@ function createBullet() {
   b.init();
 }
 
+function createEnemy() {
+  const interval = setInterval(() => {
+    let e = new Enemy();
+    e.init();
+  }, 1000);
+}
+
 function update() {
   if (keysDown["ArrowRight"]) {
     spaceshipX += 2;
@@ -75,6 +105,10 @@ function update() {
   for (let i = 0; i < bulletList.length; i++) {
     bulletList[i].update();
   }
+
+  for (let i = 0; i < enemyList.length; i++) {
+    enemyList[i].update();
+  }
 }
 
 function render() {
@@ -84,14 +118,23 @@ function render() {
   for (let i = 0; i < bulletList.length; i++) {
     ctx.drawImage(bulletImage, bulletList[i].x, bulletList[i].y);
   }
+
+  for (let i = 0; i < enemyList.length; i++) {
+    ctx.drawImage(enemyImage, enemyList[i].x, enemyList[i].y);
+  }
 }
 
 function main() {
-  update();
-  render();
-  requestAnimationFrame(main);
+  if (!gameover) {
+    update();
+    render();
+    requestAnimationFrame(main);
+  } else {
+    ctx.drawImage(gameoverImage, 10, 100 - 100, 380, 380);
+  }
 }
 
 loadImage();
 setupKeyboardListner();
+createEnemy();
 main();
