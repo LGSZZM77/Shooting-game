@@ -7,12 +7,11 @@ document.body.appendChild(canvas);
 
 let backgroundImage, spaceshipImage, bulletImage, enemyImage, gameoverImage;
 let gameover = false;
+let score = 0;
 
 //우주선
-const spaceshipSize = 64;
-const halfSpaceshipSize = 32;
-let spaceshipX = canvas.width / 2 - halfSpaceshipSize;
-let spaceshipY = canvas.height - spaceshipSize;
+let spaceshipX = canvas.width / 2 - 32;
+let spaceshipY = canvas.height - 64;
 
 // 총알
 let bulletList = [];
@@ -20,12 +19,23 @@ function Bullet() {
   this.x = 0;
   this.y = 0;
   this.init = () => {
-    this.x = spaceshipX + halfSpaceshipSize - 12;
+    this.x = spaceshipX + 32 - 12;
     this.y = spaceshipY;
+    this.alive = true;
     bulletList.push(this);
   };
   this.update = () => {
     this.y -= 5;
+  };
+
+  this.checkHit = () => {
+    for (let i = 0; i < enemyList.length; i++) {
+      if (this.y <= enemyList[i].y && this.x >= enemyList[i].x && this.x <= enemyList[i].x + 40) {
+        score++;
+        this.alive = false;
+        enemyList.splice(i, 1);
+      }
+    }
   };
 }
 function generateRandomValue(min, max) {
@@ -82,7 +92,7 @@ function createBullet() {
 }
 
 function createEnemy() {
-  const interval = setInterval(() => {
+  setInterval(() => {
     let e = new Enemy();
     e.init();
   }, 1000);
@@ -95,15 +105,18 @@ function update() {
   if (keysDown["ArrowLeft"]) {
     spaceshipX -= 2;
   }
-  if (spaceshipX >= canvas.width - spaceshipSize) {
-    spaceshipX = canvas.width - spaceshipSize;
+  if (spaceshipX >= canvas.width - 64) {
+    spaceshipX = canvas.width - 64;
   }
   if (spaceshipX <= 0) {
     spaceshipX = 0;
   }
 
   for (let i = 0; i < bulletList.length; i++) {
-    bulletList[i].update();
+    if (bulletList[i].alive) {
+      bulletList[i].update();
+      bulletList[i].checkHit();
+    }
   }
 
   for (let i = 0; i < enemyList.length; i++) {
@@ -113,10 +126,14 @@ function update() {
 
 function render() {
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-  ctx.drawImage(spaceshipImage, spaceshipX, spaceshipY, spaceshipSize, spaceshipSize);
-
+  ctx.drawImage(spaceshipImage, spaceshipX, spaceshipY, 64, 64);
+  ctx.fillText(`Score: ${score}`, 20, 40);
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
   for (let i = 0; i < bulletList.length; i++) {
-    ctx.drawImage(bulletImage, bulletList[i].x, bulletList[i].y);
+    if (bulletList[i].alive) {
+      ctx.drawImage(bulletImage, bulletList[i].x, bulletList[i].y);
+    }
   }
 
   for (let i = 0; i < enemyList.length; i++) {
